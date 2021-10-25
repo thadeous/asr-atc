@@ -22,11 +22,18 @@ def read_transcript(txt_file):
 
 class ATCDataset(Dataset):
 
-    def __init__(self, path: str, processor: Wav2Vec2Processor):
+    def __init__(self, path: str, processor: Wav2Vec2Processor, max_length=20):
         self._path = path
         self._processor = processor
         self._wavs = [join(path, f) for f in listdir(path) if isfile(join(path, f)) and f.endswith(".wav")]
-        self._vocab_dict = None
+        # filter out large wavs...
+        filtered = list()
+        for wav in self._wavs:
+            f = sf.SoundFile(wav)
+            l = f.frames / f.samplerate
+            if l < max_length:
+                filtered.append(wav)
+        self._wavs = filtered
 
     def __len__(self):
         return len(self._wavs)
